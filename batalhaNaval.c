@@ -36,7 +36,11 @@
 // 1 1 1 1 1
 // 0 0 1 0 0
 
+// Tamanho do Tabuleiro
 #define TAMANHO 10
+
+//Tamanho da Área afetada pela Bomba
+#define TAMANHO_HABILIDADE_BOMBA 5
 
 // Navio Horizontal (linha fixa, colunas variam)
 #define NAVIO_H_COL_INICIAL 2
@@ -57,6 +61,8 @@
 #define NAVIO_DS_LINHA_INICIAL 0
 #define NAVIO_DS_COL_INICIAL 9
 #define NAVIO_DS_TAMANHO 3
+
+
 
 void DEFINIR_TAMANHO_TABULEIRO(int array [TAMANHO][TAMANHO]) {
 
@@ -132,16 +138,147 @@ void EXIBIR_TABULEIRO(int array [TAMANHO][TAMANHO]){
 
 }
 
+void BOMBA_CONE(int hab[3][TAMANHO_HABILIDADE_BOMBA]) {
+
+    for (int i = 0; i < TAMANHO_HABILIDADE_BOMBA; i++) {
+        for (int j = 0; j < TAMANHO_HABILIDADE_BOMBA; j++) {
+            hab[i][j] = 0;
+        }
+    }
+
+    int centro = 2; // coluna central
+    for (int i = 0; i < 3; i++) { // altura do cone = 3 linhas
+        for (int j = centro - i; j <= centro + i; j++) {
+            hab[i][j] = 1;
+        }
+    }
+
+}
+
+void BOMBA_CRUZ(int hab[3][TAMANHO_HABILIDADE_BOMBA]) {
+
+    for (int i = 0; i < 3; i++) {
+        
+        for (int j = 0; j < TAMANHO_HABILIDADE_BOMBA; j++) {
+        
+            hab[i][j] = (i == 1 || j == 2) ? 1 : 0;
+            
+        }
+        
+    }
+
+}
+
+void BOMBA_OCTAEDRO(int hab[][TAMANHO_HABILIDADE_BOMBA], int linhas, int colunas) {
+
+    int centroLinha = linhas / 2;   // Linha central
+    int centroColuna = colunas / 2; // Coluna central
+
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+
+            // Condições para formar o octaedro
+            if ((i == centroLinha - 1 && j == centroColuna) ||         // topo
+                (i == centroLinha && (j >= centroColuna - 1 && j <= centroColuna + 1)) || // meio
+                (i == centroLinha + 1 && j == centroColuna)) {        // base
+                hab[i][j] = 1;
+            } else {
+                hab[i][j] = 0;
+            }
+
+        }
+    }
+
+}
+
+void APLICAR_HABILIDADE(int tab[TAMANHO][TAMANHO], int hab[TAMANHO_HABILIDADE_BOMBA][TAMANHO_HABILIDADE_BOMBA], int origemLinha, int origemColuna) {
+
+    int offset = 2; // Centralizar
+
+    for (int i = 0; i < TAMANHO_HABILIDADE_BOMBA; i++) {
+        
+        for (int j = 0; j < TAMANHO_HABILIDADE_BOMBA; j++) {
+        
+            if (hab[i][j] == 1) {
+                int linha = origemLinha + (i - offset);
+                int coluna = origemColuna + (j - offset);
+
+                if (linha >= 0 && linha < TAMANHO && coluna >= 0 && coluna < TAMANHO) {
+            
+                    if (tab[linha][coluna] == 0) {
+                        tab[linha][coluna] = 1;
+                    } else if (tab[linha][coluna] == 3) {
+                        tab[linha][coluna] = 5;
+                    }
+                    
+                }  
+
+            }
+            
+        }
+        
+    }
+
+}
+
 int main(){
 
     setlocale(LC_ALL, "pt_BR.UTF-8");
 
     int tabuleiro [TAMANHO][TAMANHO];
+
+    int cone[TAMANHO_HABILIDADE_BOMBA][TAMANHO_HABILIDADE_BOMBA],
+        cruz[TAMANHO_HABILIDADE_BOMBA][TAMANHO_HABILIDADE_BOMBA],
+        octaedro[TAMANHO_HABILIDADE_BOMBA][TAMANHO_HABILIDADE_BOMBA];
     
     DEFINIR_TAMANHO_TABULEIRO(tabuleiro); // Colocar o vator 0 para cada posição da matriz.
     DEFINIR_LOCAL_NAVIO(tabuleiro); // Colocar cada navio no tabuleiro.
+    
+    BOMBA_CONE(cone);
+    BOMBA_CRUZ(cruz);
+    BOMBA_OCTAEDRO(octaedro, TAMANHO_HABILIDADE_BOMBA, TAMANHO_HABILIDADE_BOMBA);
+
+    // Aplicar Bombas em Diferentes Pontos
+    APLICAR_HABILIDADE(tabuleiro, cone, 2, 2);
+    APLICAR_HABILIDADE(tabuleiro, cruz, 5, 5);
+    APLICAR_HABILIDADE(tabuleiro, octaedro, 7, 7);
+
     EXIBIR_TABULEIRO(tabuleiro); // Exibir o tabuleiro após a definição de cada local do tabuleiro.
+
+    printf("\n");
+    printf("0 - Água.\n");
+    printf("3 - Navio.\n");
+    printf("1 - Bomba na Água.\n");
+    printf("5 - Navio atingido pela Bomba.\n");
 
     return 0;
 
 }
+
+/*
+
+RESULTADO:
+
+>---> === TABULEIRO BATALHA NAVAL === <---<
+
+   | A B C D E F G H I J
+---+---------------------
+ 1 | 3 0 1 0 0 0 0 0 0 3
+ 2 | 0 5 1 1 0 0 0 0 3 0
+ 3 | 1 1 5 1 1 0 0 3 0 0
+ 4 | 0 0 0 0 0 1 0 0 0 0
+ 5 | 0 0 0 1 1 1 5 1 0 0
+ 6 | 0 0 0 0 0 1 3 0 0 0
+ 7 | 0 0 0 0 0 0 3 1 0 0
+ 8 | 0 0 0 0 0 0 1 1 1 0
+ 9 | 0 0 3 3 3 0 0 1 0 0
+10 | 0 0 0 0 0 0 0 0 0 0
+
+--------------------------------------
+
+0 - Água.
+3 - Navio.
+1 - Bomba na Água.
+5 - Navio atingido pela Bomba.
+
+*/
