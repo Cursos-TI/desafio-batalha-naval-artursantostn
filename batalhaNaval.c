@@ -62,8 +62,6 @@
 #define NAVIO_DS_COL_INICIAL 9
 #define NAVIO_DS_TAMANHO 3
 
-
-
 void DEFINIR_TAMANHO_TABULEIRO(int array [TAMANHO][TAMANHO]) {
 
     for (int index_linha = 0; index_linha < TAMANHO; index_linha++) {
